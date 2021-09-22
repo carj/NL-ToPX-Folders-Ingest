@@ -1,7 +1,9 @@
 # NL-ToPX-Folders-Ingest
 Preservica ingest script for NL local gov.
 
-Expects a folder structure with the following directories:
+Expects a folder structure with the following directories
+
+The metadata files contain ToPX http://www.nationaalarchief.nl/ToPX/v2.3
 
 ```
 Archief/
