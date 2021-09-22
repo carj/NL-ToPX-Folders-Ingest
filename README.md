@@ -3,6 +3,7 @@ Preservica ingest script for NL local gov.
 
 Expects a folder structure with the following directories:
 
+```
 Archief/
         Archief.metadata
         Serie/
@@ -18,6 +19,6 @@ Archief/
                             file.pdf
                             file.pdf.metadata
                                               
-                                               
                                               
+```                                              
 
