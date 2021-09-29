@@ -65,6 +65,7 @@ if __name__ == '__main__':
         if len(entities) == 0:
             folder = entity.create_folder(archief, archief, security_tag, parent)
             entity.add_identifier(folder, "identificatiekenmerk", identifier)
+            logger.info(f"adding metadata {archief_topx} To Folder {archief}")
             with open(archief_topx, 'r', encoding="utf-8") as md:
                 folder = entity.add_metadata(folder, "http://www.nationaalarchief.nl/ToPX/v2.3", md)
             archief_parent = folder.reference
@@ -82,6 +83,7 @@ if __name__ == '__main__':
             if len(entities) == 0:
                 folder = entity.create_folder(serie, serie, security_tag, archief_parent)
                 entity.add_identifier(folder, "identificatiekenmerk", identifier)
+                logger.info(f"adding metadata {serie_topx} To Folder {serie}")
                 with open(serie_topx, 'r', encoding="utf-8") as md:
                     folder = entity.add_metadata(folder, "http://www.nationaalarchief.nl/ToPX/v2.3", md)
                 serie_parent = folder.reference
@@ -99,6 +101,7 @@ if __name__ == '__main__':
                 if len(entities) == 0:
                     folder = entity.create_folder(dossier, dossier, security_tag, serie_parent)
                     entity.add_identifier(folder, "identificatiekenmerk", identifier)
+                    logger.info(f"adding metadata {dossier_topx} To Folder {dossier}")
                     with open(dossier_topx, 'r', encoding="utf-8") as md:
                         folder = entity.add_metadata(folder, "http://www.nationaalarchief.nl/ToPX/v2.3", md)
                     dossier_parent = folder.reference
