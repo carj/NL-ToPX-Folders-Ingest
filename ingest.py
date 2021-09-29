@@ -1,11 +1,20 @@
 import math
-
+import logging
 import xml.etree.ElementTree as ET
 from pyPreservica import *
 import configparser
 import os
 import zipfile
 
+
+
+logger = logging.getLogger(__name__)
+
+LOG_FILENAME = 'ingest.log'
+logging.basicConfig(level=logging.INFO, filename=LOG_FILENAME, filemode="a")
+
+consoleHandler = logging.StreamHandler()
+logging.getLogger().addHandler(consoleHandler)
 
 def chunks(lst, n):
     for i in range(0, len(lst), n):
@@ -21,7 +30,7 @@ def extract_level(topx_file):
 
 if __name__ == '__main__':
     entity = EntityAPI()
-    print(entity)
+    logger.info(entity)
     upload = UploadAPI()
 
     config = configparser.ConfigParser()
@@ -36,10 +45,10 @@ if __name__ == '__main__':
         parent = parent.reference
     else:
         parent = None
-    print(f"Packages will be ingested into {parent}")
+    logger.info(f"Packages will be ingested into {parent}")
 
     data_folder = config['credentials']['data.folder']
-    print(f"Packages will be created from folders in {data_folder}")
+    logger.info(f"Packages will be created from folders in {data_folder}")
 
     group_size = int(config['credentials']['group.size'])
     bucket = config['credentials']['bucket']
@@ -47,7 +56,7 @@ if __name__ == '__main__':
     # list archive folders in data directory
     archief_folders = [f.name for f in os.scandir(data_folder) if f.is_dir()]
     for archief in archief_folders:
-        print(f"Found {archief} Archief Folder")
+        logger.info(f"Found {archief} Archief Folder")
         archief_folder = os.path.join(os.path.join(data_folder, archief))
         archief_topx = os.path.join(archief_folder, f"{archief}.metadata")
         assert os.path.isfile(archief_topx)
@@ -64,7 +73,7 @@ if __name__ == '__main__':
             archief_parent = folder.reference
         serie_folders = [f.name for f in os.scandir(archief_folder) if f.is_dir()]
         for serie in serie_folders:
-            print(f"Found {serie} Serie Folder")
+            logger.info(f"Found {serie} Serie Folder")
             serie_folder = os.path.join(os.path.join(archief_folder, serie))
             serie_topx = os.path.join(serie_folder, f"{serie}.metadata")
             assert os.path.isfile(serie_topx)
@@ -81,7 +90,7 @@ if __name__ == '__main__':
                 serie_parent = folder.reference
             dossier_folders = [f.name for f in os.scandir(serie_folder) if f.is_dir()]
             for dossier in dossier_folders:
-                print(f"Found {dossier} Dossier Folder")
+                logger.info(f"Found {dossier} Dossier Folder")
                 dossier_folder = os.path.join(os.path.join(serie_folder, dossier))
                 dossier_topx = os.path.join(dossier_folder, f"{dossier}.metadata")
                 assert os.path.isfile(dossier_topx)
@@ -100,13 +109,13 @@ if __name__ == '__main__':
                 record_folders = [f.path for f in os.scandir(dossier_folder) if f.is_dir()]
 
                 num_folders = len(record_folders)
-                print(f"Found {num_folders} folders to ingest in Dossier {dossier}")
+                logger.info(f"Found {num_folders} folders to ingest in Dossier {dossier}")
 
                 os.chdir(dossier_folder)
 
-                print(f"Batching ingests into groups of {group_size}")
+                logger.info(f"Batching ingests into groups of {group_size}")
 
-                print(f"This will require about {math.ceil(num_folders / group_size)} submissions")
+                logger.info(f"This will require about {math.ceil(num_folders / group_size)} submissions")
 
                 # get a group of folders we can ingest together
                 for batch in chunks(record_folders, group_size):
@@ -117,9 +126,9 @@ if __name__ == '__main__':
                         if len(result) > 0:
                             batches.remove(f)
                     if len(batches) == 0:
-                        print(f"All folders in batch exist, skipping upload...")
+                        logger.info(f"All folders in batch exist, skipping upload...")
                     if len(batches) > 0:
-                        print(batches)
+                        logger.info(batches)
                         zipfile_name = f"{batches[0]}.zip"
                         zf = zipfile.ZipFile(zipfile_name, "w")
                         for root_folder in batches:
@@ -131,17 +140,17 @@ if __name__ == '__main__':
 
                         package_size_bytes = int(os.path.getsize(zipfile_name))
                         package_size_MB = int(package_size_bytes // int(1024 * 1024))
-                        print(f"Created submission with {group_size} folders and total size of {package_size_MB}MB")
+                        logger.info(f"Created submission with {group_size} folders and total size of {package_size_MB}MB")
 
                         if package_size_MB > 512:
-                            print(f"Uploading to S3 bucket {bucket}")
+                            logger.info(f"Uploading to S3 bucket {bucket}")
                             upload.upload_zip_package_to_S3(path_to_zip_package=zipfile_name, folder=dossier_parent,
                                                             bucket_name=bucket,
                                                             callback=UploadProgressCallback(zipfile_name),
                                                             delete_after_upload=True)
                         else:
-                            print(f"Uploading to Preservica")
+                            logger.info(f"Uploading to Preservica")
                             upload.upload_zip_package(path_to_zip_package=zipfile_name, folder=dossier_parent,
                                                       callback=UploadProgressCallback(zipfile_name),
                                                       delete_after_upload=True)
-                        print(f"")
+                        logger.info(f"")
