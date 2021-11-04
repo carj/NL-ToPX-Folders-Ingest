@@ -138,7 +138,7 @@ if __name__ == '__main__':
                     logger.info(
                         f"Created submission with {group_size} folders and total size of {package_size_MB}MB")
 
-                    if package_size_MB > 256:
+                    if package_size_MB > 32:
                         logger.info(f"Uploading to S3 bucket {bucket}")
                         upload.upload_zip_package_to_S3(path_to_zip_package=zipfile_name, folder=dossier_parent,
                                                         bucket_name=bucket,
